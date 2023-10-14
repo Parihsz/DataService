@@ -1,7 +1,11 @@
 # DataService
 DataService is a ProfileService wrapper, that's about it.
 
-# Usage
+## Installation
+
+Model: https://create.roblox.com/marketplace/asset/15066046821/DataService
+
+## Usage
 
 ### Initializing
 Proceed to ServerStorage -> DateTemplate
