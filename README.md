@@ -25,6 +25,11 @@ DataService.Initialize()
 
 All Set!
 
+### Wait for Data to load properly
+```lua
+DataService.DataLoaded:Connect(onDataLoaded)
+```
+
 ### Setting Data
 ```lua
 local DataService = require(Path)
