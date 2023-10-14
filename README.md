@@ -16,6 +16,15 @@ local dataTemplate = {
 }
 return dataTemplate
 ```
+
+Initialize DataService
+```lua
+local DataService = require(Path)
+DataService.Initialize()
+```
+
+All Set!
+
 ### Setting Data
 ```lua
 local DataService = require(Path)
