@@ -28,6 +28,7 @@ All Set!
 ### Wait for Data to load properly
 ```lua
 DataService.DataLoaded:Connect(onDataLoaded)
+--set up your onDatLoaded function to utilize the loaded profile!
 ```
 
 ### Setting Data
