@@ -1,5 +1,8 @@
 # DataService
-DataService is a ProfileService wrapper, that's about it.
+DataService is a ProfileService wrapper, that's about it. 
+
+Heavily abstracted, literally uses a good chunk of PS documentation code under the hood.
+Listens for playeradded for you, uses a signal implementation to alert other scripts when a profile has been loaded.
 
 ## Installation
 
