@@ -12,7 +12,7 @@ Proceed to ServerStorage -> DateTemplate
 ```lua
 --Initalize the data template so it's ready to be used.
 local dataTemplate = {
-    Inventory = {}
+    coins = 0
 }
 return dataTemplate
 ```
@@ -34,12 +34,12 @@ DataService.DataLoaded:Connect(onDataLoaded)
 ### Setting Data
 ```lua
 local DataService = require(Path)
-DataService.SetData(player, "Inventory", {"Sword", "Sword2"}) --setting inventory data
+DataService.SetData(player, "coins", 5) --setting coins data
 ```
 
 ### Getting Data
 ```lua
-local data = DataService.GetData(player, "Inventory")
---retrieves the inventory data along with attached metadata
+local data = DataService.GetData(player, "coins")
+--retrieves the coins data along with attached metadata
 ```
 
