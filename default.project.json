@@ -1,0 +1,17 @@
+{
+    "name": "dataservice-v2",
+    "emitLegacyScripts": false,
+    "tree": {
+        "$className": "DataModel",
+        "ReplicatedStorage": {
+            "Shared": {
+                "$path": "src/Shared",
+                "$ignoreUnknownInstances": true
+            }
+        },
+        "ServerScriptService": {
+            "$path": "src/Server",
+            "$ignoreUnknownInstances": true
+        }
+    }
+}
