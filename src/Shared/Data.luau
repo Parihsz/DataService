@@ -3,81 +3,58 @@ export type ReplicationDefinition = {
 	[string]: ReplicationLevel | ReplicationDefinition,
 }
 
+export type FieldType =
+	| "u8"
+	| "u16"
+	| "u32"
+	| "i8"
+	| "i16"
+	| "i32"
+	| "f16"
+	| "f32"
+	| "f64"
+	| "vector"
+	| "buffer"
+	| "string"
+	| "boolean"
+	| "CFrame"
+	| "Color3"
+	| "Instance"
+
 export type Field<T> = {
 	value: T,
 	replication: ReplicationLevel,
-	type: "u8"
-		| "u16"
-		| "u32"
-		| "i8"
-		| "i16"
-		| "i32"
-		| "f16"
-		| "f32"
-		| "f64"
-		| "vector"
-		| "buffer"
-		| "string"
-		| "boolean"
-		| "CFrame"
-		| "Color3"
-		| "Instance",
+	type: FieldType,
 }
 
 local Data = {}
 Data.VERSION = 1
 
-function Data.u8(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "u8" }
+local function DataType<T, F>(typeName: T & FieldType)
+	return function(replication: ReplicationLevel, value: F): Field<F>
+		return {
+			value = value,
+			replication = replication,
+			type = typeName,
+		}
+	end
 end
 
-function Data.u16(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "u16" }
-end
-
-function Data.u32(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "u32" }
-end
-
-function Data.i8(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "i8" }
-end
-
-function Data.i16(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "i16" }
-end
-
-function Data.i32(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "i32" }
-end
-
-function Data.f16(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "f16" }
-end
-
-function Data.f32(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "f32" }
-end
-
-function Data.f64(replication: ReplicationLevel, value: number): Field<number>
-	return { value = value, replication = replication, type = "f64" }
-end
-
-function Data.vector(replication: ReplicationLevel, value: Vector3): Field<Vector3>
-	return { value = value, replication = replication, type = "vector" }
-end
-
-function Data.string(replication: ReplicationLevel, value: string): Field<string>
-	return { value = value, replication = replication, type = "string" }
-end
-
-function Data.boolean(replication: ReplicationLevel, value: boolean): Field<boolean>
-	return { value = value, replication = replication, type = "boolean" }
-end
-
-function Data.CFrame(replication: ReplicationLevel, value: CFrame): Field<CFrame>
-	return { value = value, replication = replication, type = "CFrame" }
-end
+Data.u8 = DataType("u8")
+Data.u16 = DataType("u16")
+Data.u32 = DataType("u32")
+Data.i8 = DataType("i8")
+Data.i16 = DataType("i16")
+Data.i32 = DataType("i32")
+Data.f16 = DataType("f16")
+Data.f32 = DataType("f32")
+Data.f64 = DataType("f64")
+Data.vector = DataType("vector")
+Data.string = DataType("string")
+Data.boolean = DataType("boolean")
+Data.CFrame = DataType("CFrame")
+Data.Color3 = DataType("Color3")
+Data.Instance = DataType("Instance")
 
 function Data.Extract(template: { [string]: any }): ({ [string]: any }, ReplicationDefinition, { [string]: any })
 	local data = {}
