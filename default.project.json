@@ -7,7 +7,11 @@
             "Shared": {
                 "$path": "src/Shared",
                 "$ignoreUnknownInstances": true
-            }
+            },
+            "Client": {
+                "$path": "src/Client",
+                "$ignoreUnknownInstances": true
+            }   
         },
         "ServerScriptService": {
             "$path": "src/Server",

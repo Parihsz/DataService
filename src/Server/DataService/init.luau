@@ -4,11 +4,10 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ProfileService = require(script.ProfileService)
 local Data = require(ReplicatedStorage.Shared.Data)
-local Template = require(script.Parent.Template)
+local Template = require(ReplicatedStorage.Shared.Template)
 local Future = require(ReplicatedStorage.Shared.Utils.Future)
 local SerDes = require(ReplicatedStorage.Shared.SerDes)
 local Writer = require(ReplicatedStorage.Shared.Buffer.Writer)
-local Reader = require(ReplicatedStorage.Shared.Buffer.Reader)
 
 local STORE = `PlayerDataV{Data.VERSION}`
 local PREFIX = "Player_"
@@ -24,6 +23,10 @@ type ReplicationLevel = Data.ReplicationLevel
 local profiles: { [Player]: any } = {}
 local tempData: { [Player]: any } = {}
 
+local NETWORK_CHANGE = Instance.new("RemoteEvent")
+NETWORK_CHANGE.Name = "NETWORK_CHANGE"
+NETWORK_CHANGE.Parent = ReplicatedStorage
+
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 DataService.DataLoaded = Signal()
 DataService.DataChanged = Signal()
@@ -32,14 +35,16 @@ local function GetKey(userId: number): string
 	return `{PREFIX}{userId}`
 end
 
-local function Replicate(player, key, value, type)
-	print(key, value)
+local function Replicate(player, key, value, fieldType, replicationLevel)
 	local writer = Writer.new()
-	SerDes.Serialize({ [key] = value }, writer :: any, type)
+	SerDes.Serialize({ [key] = value }, writer :: any, fieldType)
 	local serialized = writer.buff
-	print(serialized)
-	local reader = Reader.new(writer.buff)
-	print(SerDes.Deserialize(reader :: any, type))
+
+	if replicationLevel == "Public" then
+		NETWORK_CHANGE:FireAllClients(key, serialized, player)
+	elseif replicationLevel == "Private" then
+		NETWORK_CHANGE:FireClient(player, key, serialized)
+	end
 end
 
 local function PlayerAdded(player: Player)
@@ -61,7 +66,10 @@ local function PlayerAdded(player: Player)
 		end
 
 		profile.Data = DataService.MakeNetworkable(player, profile.Data)
-		DataService.DataLoaded:Fire(player, profile.Data)
+		local data, _, _ = Data.Extract(Template :: any)
+
+		DataService.DataLoaded:Fire(player, data)
+		NETWORK_CHANGE:FireClient(player, "FullData", data)
 	else
 		player:Kick()
 	end
@@ -110,10 +118,8 @@ function DataService.MakeNetworkable<T>(player: Player, dataTemplate: T): T
 
 				local replicationLevel = localReplication or "Private"
 
-				if replicationLevel == "Public" then
-					local fieldType = types[key]
-					Replicate(player, fullKey, value, fieldType)
-				end
+				local fieldType = types[key]
+				Replicate(player, fullKey, value, fieldType, replicationLevel)
 
 				OnDataChanged(player, fullKey, value)
 			end,

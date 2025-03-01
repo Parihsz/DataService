@@ -96,49 +96,49 @@ export type Data = {
 }
 
 local dataTemplate: Data = {
-	firstTime = boolean("Public", true),
+	firstTime = boolean("Private", true),
 
-	xp = f32("Public", 0),
-	requiredXp = f32("Public", 100),
-	level = u32("Public", 1),
+	xp = f32("Private", 0),
+	requiredXp = f32("Private", 100),
+	level = u32("Private", 1),
 
-	alignment = str("Public", "Jedi"),
-	gender = str("Public", "Male"),
+	alignment = str("Private", "Jedi"),
+	gender = str("Private", "Male"),
 
 	racial = {
-		race = str("Public", "Human"),
+		race = str("Private", "Human"),
 	},
-	raceSpins = u8("Public", 3),
+	raceSpins = u8("Private", 3),
 
 	appearance = {
-		headVariant = str("Public", "default"),
+		headVariant = str("Private", "default"),
 		face = {
-			eye = str("Public", "default"),
-			irisHex = str("Public", "#000000"),
-			mouth = str("Public", "default"),
-			extra = str("Public", ""),
+			eye = str("Private", "default"),
+			irisHex = str("Private", "#000000"),
+			mouth = str("Private", "default"),
+			extra = str("Private", ""),
 		},
-		clothing = str("Public", "default"),
+		clothing = str("Private", "default"),
 	},
 
 	crates = {
-		["1"] = u32("Public", 0),
-		["2"] = u32("Public", 0),
-		["3"] = u32("Public", 0),
-		["4"] = u32("Public", 0),
-		["5"] = u32("Public", 0),
+		["1"] = u32("Private", 0),
+		["2"] = u32("Private", 0),
+		["3"] = u32("Private", 0),
+		["4"] = u32("Private", 0),
+		["5"] = u32("Private", 0),
 	},
 
 	keybinds = {},
-	credits = i32("Public", 0),
+	credits = i32("Private", 0),
 
-	selectedBuild = u32("Public", 0),
+	selectedBuild = u32("Private", 0),
 	builds = {},
 
 	skillTiers = {},
 
 	settings = {
-		wSprint = boolean("Public", true),
+		wSprint = boolean("Private", true),
 	},
 
 	unlockedSkills = {},
