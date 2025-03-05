@@ -1,4 +1,3 @@
-local DataController = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Future = require(ReplicatedStorage.Shared.Utils.Future)
@@ -9,7 +8,8 @@ local Data = require(ReplicatedStorage.Shared.Data)
 local Template = require(ReplicatedStorage.Shared.Template)
 local PublicData = require(script.Parent.PublicData)
 
-local NETWORK_CHANGE = ReplicatedStorage:WaitForChild("NETWORK_CHANGE")
+local DataController = {}
+
 local data: Template.Data? = nil
 
 DataController.Updated = Signal()
@@ -86,9 +86,10 @@ function DataController.UnwrapData(): Template.Data?
 end
 
 local function Initialize()
+	local NETWORK_CHANGE = ReplicatedStorage:WaitForChild("NETWORK_CHANGE")
 	NETWORK_CHANGE.OnClientEvent:Connect(HandleReplicateData)
 end
 
-Initialize()
+task.spawn(Initialize)
 
 return DataController

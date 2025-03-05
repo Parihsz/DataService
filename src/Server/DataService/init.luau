@@ -1,5 +1,3 @@
-local DataService = {}
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ProfileService = require(script.ProfileService)
@@ -8,6 +6,8 @@ local Template = require(ReplicatedStorage.Shared.Template)
 local Future = require(ReplicatedStorage.Shared.Utils.Future)
 local SerDes = require(ReplicatedStorage.Shared.SerDes)
 local Writer = require(ReplicatedStorage.Shared.Buffer.Writer)
+
+local DataService = {}
 
 local STORE = `PlayerDataV{Data.VERSION}`
 local PREFIX = "Player_"
@@ -35,7 +35,13 @@ local function GetKey(userId: number): string
 	return `{PREFIX}{userId}`
 end
 
-local function Replicate(player, key, value, fieldType, replicationLevel)
+local function Replicate(
+	player: Player,
+	key: any,
+	value: any,
+	fieldType: Data.FieldType,
+	replicationLevel: Data.ReplicationLevel
+)
 	local writer = Writer.new()
 	SerDes.Serialize({ [key] = value }, writer :: any, fieldType)
 	local serialized = writer.buff
@@ -119,7 +125,7 @@ function DataService.MakeNetworkable<T>(player: Player, dataTemplate: T): T
 				local replicationLevel = localReplication or "Private"
 
 				local fieldType = types[key]
-				Replicate(player, fullKey, value, fieldType, replicationLevel)
+				Replicate(player, fullKey, value, fieldType, replicationLevel :: ReplicationLevel)
 
 				OnDataChanged(player, fullKey, value)
 			end,

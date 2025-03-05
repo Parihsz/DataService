@@ -1,6 +1,8 @@
-local PublicData = {}
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
+
+local PublicData = {}
 
 local data = {}
 
@@ -33,5 +35,9 @@ end
 function PublicData.GetData(player)
 	return data[player]
 end
+
+Players.PlayerRemoving:Connect(function(player)
+	data[player] = nil
+end)
 
 return PublicData
