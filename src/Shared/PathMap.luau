@@ -1,85 +1,56 @@
-local Template = require(script.Parent.Template)
-local Data = require(script.Parent.Data)
-
-type DataTemplate = { [string]: any }
-type PathEntry = { fullKey: string, parent: DataTemplate?, key: string }
-
 local PathMap = {}
+local pointerToId = {}
+local idToPointer = {}
 
-local pathToId = {} :: { [string]: number }
-local idToMapping = {} :: { [number]: { tab: DataTemplate?, key: string } }
-local allPaths = {} :: { PathEntry }
+local incrementalUID = 0
+local root = nil
 
-local function FromPrefix(data: DataTemplate, prefix: string): DataTemplate
-	if prefix == "" then
-		return data
+local function AssignId(table)
+	if not pointerToId[table] then
+		incrementalUID += 1
+		pointerToId[table] = incrementalUID
+		idToPointer[incrementalUID] = table
 	end
-	local parent = data
+end
 
-	for _, k in prefix:split(".") do
-		parent = (parent :: any)[k]
-		if not parent then
-			break
+local function AssignIds(node)
+	if type(node) ~= "table" then
+		return
+	end
+
+	if not root then
+		root = node
+	end
+
+	AssignId(node)
+
+	for _, child in node do
+		if type(child) == "table" then
+			AssignIds(child)
 		end
 	end
-
-	return parent
 end
 
-local function GetPaths(mapping: DataTemplate, data: DataTemplate, prefix: string?)
-	prefix = prefix or ""
-	for key, value in mapping do
-		local fullKey = (prefix == "" and key or `"{prefix}.{key}"`)
+function PathMap.GetId(table)
+	return pointerToId[table]
+end
 
-		table.insert(allPaths, { fullKey = fullKey, parent = FromPrefix(data, prefix :: string), key = key })
+function PathMap.GetPointer(id: number?)
+	if not id then
+		return root
+	end
+	return idToPointer[id]
+end
 
-		if type(value) == "table" then
-			GetPaths(value, data, fullKey)
-		end
+function PathMap.UpdateById(parentId: number, key: any, value: any)
+	local parentRef = idToPointer[parentId]
+	if parentRef then
+		parentRef[key] = value
+	else
+		warn("No table reference found for ID", parentId)
 	end
 end
 
-local data, _, typeMapping = Data.Extract(Template)
-GetPaths(typeMapping, data)
-
-table.sort(allPaths, function(a, b)
-	return a.fullKey < b.fullKey
-end)
-
-for i, entry in allPaths do
-	pathToId[entry.fullKey] = i
-	idToMapping[i] = { tab = entry.parent, key = entry.key }
-end
-
-function PathMap.GetId(path: string): number?
-	return pathToId[path]
-end
-
-function PathMap.GetMapping(id: number): { tab: DataTemplate?, key: string }?
-	return idToMapping[id]
-end
-
-local cache = {}
-
-function PathMap.GetPointer(data: DataTemplate, path: string): { parent: DataTemplate, key: string }?
-	if cache[path] then
-		return cache[path]
-	end
-
-	local keys = path:split(".")
-	local node = data
-	for i = 1, #keys - 1 do
-		node = node[keys[i]]
-		if not node then
-			return nil
-		end
-	end
-
-	cache[path] = { parent = node, key = keys[#keys] }
-	return cache[path]
-end
-
-PathMap.PathToId = pathToId
-PathMap.IdToMapping = idToMapping
+PathMap.AssignIds = AssignIds
 
 return PathMap

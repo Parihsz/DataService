@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local Future = require(ReplicatedStorage.Shared.Utils.Future)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
@@ -38,46 +39,46 @@ local function GetFieldType(key: string)
 	return fieldTypes[key] or "table"
 end
 
-local function HandleReplicateData(keyOrId: string | number, serialized: any, player: Player?): ()
-	if keyOrId == "FullData" then
+local function HandleReplicateData(idOrFull: string | number, keyOrData: any, serialized: any, player: Player?)
+	if idOrFull == "FullData" then
 		if player then
-			PublicData.UpdateData(player, keyOrId, serialized)
+			PublicData.UpdateData(player, idOrFull, keyOrData)
+			if player == Players.LocalPlayer then
+				data = keyOrData
+				DataController.Updated:Fire(data)
+			end
 		else
-			data = serialized
+			data = keyOrData
 			DataController.Updated:Fire(data)
 		end
 		return
 	end
 
-	local path: string
-	if typeof(keyOrId) == "number" then
-		local mapping = PathMapping.GetMapping(keyOrId)
-		if not mapping then
-			warn(`No path mapping found for ID {keyOrId}`)
-			return
-		end
-		path = mapping.key
-	else
-		path = keyOrId
-	end
+	local parent = PathMapping.GetPointer(idOrFull :: number)
 
-	if not path then
-		warn("path is nil")
+	if not parent then
+		warn(`No table reference found for ID {idOrFull}`)
 		return
 	end
 
+	local fieldType = GetFieldType(keyOrData) or "table"
 	local reader = Reader.new(serialized)
-	local fieldType = GetFieldType(path) or "table"
 	local update = SerDes.Deserialize(reader :: any, fieldType)
 
-	if player then
-		PublicData.UpdateData(player, path, update)
-	else
-		local pointer = PathMapping.GetPointer(data :: Template.Data, path)
-		if pointer then
-			pointer.parent[pointer.key] = update[path]
-		end
+	if type(update) == "table" and update[keyOrData] ~= nil then
+		update = update[keyOrData]
+	end
 
+	PathMapping.UpdateById(idOrFull :: number, keyOrData, update)
+
+	if player then
+		PublicData.UpdateData(player, keyOrData, update)
+		if player == Players.LocalPlayer then
+			data = PathMapping.GetPointer()
+			DataController.Updated:Fire(data)
+		end
+	else
+		data = PathMapping.GetPointer()
 		DataController.Updated:Fire(data)
 	end
 end
@@ -85,7 +86,7 @@ end
 function DataController.GetData(): Future.Future<any>
 	return Future.new(function()
 		if not data then
-			return DataController.Updated:Wait()
+			data = DataController.Updated:Wait()
 		end
 		return data
 	end)
@@ -96,6 +97,11 @@ function DataController.UnwrapData(): Template.Data?
 end
 
 local function Initialize()
+	local extractedData, _, _ = Data.Extract(Template :: any)
+	data = extractedData
+
+	PathMapping.AssignIds(data)
+
 	local NETWORK_CHANGE = ReplicatedStorage:WaitForChild("NETWORK_CHANGE")
 	NETWORK_CHANGE.OnClientEvent:Connect(HandleReplicateData)
 end

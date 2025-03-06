@@ -38,22 +38,26 @@ end
 
 local function Replicate(
 	player: Player,
-	key: any,
+	parentRef: {},
+	key: string,
 	value: any,
 	fieldType: Data.FieldType,
-	replicationLevel: Data.ReplicationLevel
+	replicationLevel: ReplicationLevel
 )
 	local writer = Writer.new()
 	SerDes.Serialize({ [key] = value }, writer :: any, fieldType)
 	local serialized = writer.buff
 
-	local keyId = PathMap.GetId(key)
-	local toSend = keyId or key
+	local parentId = PathMap.GetId(parentRef)
+	if not parentId then
+		warn("No ID found for table reference:", parentRef)
+		return
+	end
 
 	if replicationLevel == "Public" then
-		NETWORK_CHANGE:FireAllClients(toSend, serialized, player)
+		NETWORK_CHANGE:FireAllClients(parentId, key, serialized, player)
 	elseif replicationLevel == "Private" then
-		NETWORK_CHANGE:FireClient(player, toSend, serialized)
+		NETWORK_CHANGE:FireClient(player, parentId, key, serialized)
 	end
 end
 
@@ -94,29 +98,29 @@ local function PlayerRemoving(player: Player)
 	tempData[player] = nil
 end
 
-local function OnDataChanged(player: Player, key: string, value: any)
-	DataService.DataChanged:Fire(player, key, value)
+local function OnDataChanged(player: Player, parentRef: {}, key: string, value: any)
+	DataService.DataChanged:Fire(player, parentRef, key, value)
 end
 
 function DataService.MakeNetworkable<T>(player: Player, dataTemplate: T): T
 	local data, replicationDefinition, typeDefinition = Data.Extract(dataTemplate :: any)
 
+	PathMap.AssignIds(data)
+
 	local function CreateShadowTable(
 		default: { [string]: any },
 		definition: ReplicationDefinition,
-		types: { [string]: any },
-		parentKey: string?
+		types: { [string]: any }
 	): any
 		local shadowTable = {}
 
 		setmetatable(shadowTable, {
 			__index = default,
 			__newindex = function(_, key: string, value: any)
-				local fullKey = parentKey and `{parentKey}.{key}` or key
-
 				if type(value) == "table" then
 					local subData, subDef, subTypes = Data.Extract(value)
-					value = CreateShadowTable(subData, subDef, subTypes, fullKey)
+					PathMap.AssignIds(subData)
+					value = CreateShadowTable(subData, subDef, subTypes)
 				end
 
 				default[key] = value
@@ -125,37 +129,36 @@ function DataService.MakeNetworkable<T>(player: Player, dataTemplate: T): T
 				if type(localReplication) == "table" then
 					localReplication = "Private"
 				end
-
 				local replicationLevel = localReplication or "Private"
 
 				local fieldType = types[key]
-				Replicate(player, fullKey, value, fieldType, replicationLevel :: ReplicationLevel)
 
-				OnDataChanged(player, fullKey, value)
+				Replicate(player, default, key, value, fieldType, replicationLevel :: ReplicationLevel)
+				OnDataChanged(player, default, key, value)
 			end,
 		})
 
 		for k, v in default do
 			if type(v) == "table" then
+				local nestedDef = {}
 				local nestedTypes = {}
 
+				if type(definition[k]) == "table" then
+					nestedDef = definition[k] :: ReplicationDefinition
+				end
 				if type(types[k]) == "table" then
 					nestedTypes = types[k]
 				end
 
-				local nested: ReplicationDefinition = {}
-				if type(definition[k]) == "table" then
-					nested = definition[k] :: ReplicationDefinition
-				end
-
-				default[k] = CreateShadowTable(v, nested, nestedTypes, parentKey and `{parentKey}.{k}` or k)
+				PathMap.AssignIds(v)
+				default[k] = CreateShadowTable(v, nestedDef, nestedTypes)
 			end
 		end
 
 		return shadowTable
 	end
 
-	return CreateShadowTable(data, replicationDefinition, typeDefinition, nil)
+	return CreateShadowTable(data, replicationDefinition, typeDefinition)
 end
 
 function DataService.GetData(player: Player)
@@ -196,7 +199,6 @@ end
 
 function DataService.SetTempData(player: Player, newTemp: any): ()
 	tempData[player] = newTemp
-	DataService.DataChanged:Fire(player, newTemp)
 end
 
 function DataService.GetTempData(player: Player): any
