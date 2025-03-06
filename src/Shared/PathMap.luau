@@ -16,7 +16,7 @@ local function FromPrefix(data: DataTemplate, prefix: string): DataTemplate
 	end
 	local parent = data
 
-	for _, k in string.split(prefix, ".") do
+	for _, k in prefix:split(".") do
 		parent = (parent :: any)[k]
 		if not parent then
 			break
