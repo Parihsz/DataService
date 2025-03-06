@@ -7,6 +7,7 @@ local Reader = require(ReplicatedStorage.Shared.Buffer.Reader)
 local Data = require(ReplicatedStorage.Shared.Data)
 local Template = require(ReplicatedStorage.Shared.Template)
 local PublicData = require(script.Parent.PublicData)
+local PathMapping = require(ReplicatedStorage.Shared.PathMap)
 
 local DataController = {}
 
@@ -49,10 +50,10 @@ local function ApplyUpdates(root: any, path: string, value: any): ()
 	node[keys[#keys]] = value
 end
 
-local function HandleReplicateData(key: string, serialized: any, player: Player?): ()
-	if key == "FullData" then
+local function HandleReplicateData(keyOrId: string | number, serialized: any, player: Player?): ()
+	if keyOrId == "FullData" then
 		if player then
-			PublicData.UpdateData(player, key, serialized)
+			PublicData.UpdateData(player, keyOrId, serialized)
 		else
 			data = serialized
 			DataController.Updated:Fire(data)
@@ -60,14 +61,31 @@ local function HandleReplicateData(key: string, serialized: any, player: Player?
 		return
 	end
 
+	local path: string
+	if typeof(keyOrId) == "number" then
+		local mapping = PathMapping.GetMapping(keyOrId)
+		if not mapping then
+			warn(`No path mapping found for ID {keyOrId}`)
+			return
+		end
+		path = mapping.key
+	else
+		path = keyOrId
+	end
+
+	if not path then
+		warn("path is nil")
+		return
+	end
+
 	local reader = Reader.new(serialized)
-	local fieldType = GetFieldType(key) or "table"
+	local fieldType = GetFieldType(path) or "table"
 	local update = SerDes.Deserialize(reader :: any, fieldType)
 
 	if player then
-		PublicData.UpdateData(player, key, update)
+		PublicData.UpdateData(player, path, update)
 	else
-		ApplyUpdates(data, key, update[key])
+		ApplyUpdates(data, path, update[path])
 		DataController.Updated:Fire(data)
 	end
 end
@@ -91,5 +109,9 @@ local function Initialize()
 end
 
 task.spawn(Initialize)
+
+task.delay(5, function()
+	print(DataController.GetData():Unwrap())
+end)
 
 return DataController

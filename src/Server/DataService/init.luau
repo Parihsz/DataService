@@ -6,6 +6,7 @@ local Template = require(ReplicatedStorage.Shared.Template)
 local Future = require(ReplicatedStorage.Shared.Utils.Future)
 local SerDes = require(ReplicatedStorage.Shared.SerDes)
 local Writer = require(ReplicatedStorage.Shared.Buffer.Writer)
+local PathMap = require(ReplicatedStorage.Shared.PathMap)
 
 local DataService = {}
 
@@ -46,10 +47,13 @@ local function Replicate(
 	SerDes.Serialize({ [key] = value }, writer :: any, fieldType)
 	local serialized = writer.buff
 
+	local keyId = PathMap.GetId(key)
+	local toSend = keyId or key
+
 	if replicationLevel == "Public" then
-		NETWORK_CHANGE:FireAllClients(key, serialized, player)
+		NETWORK_CHANGE:FireAllClients(toSend, serialized, player)
 	elseif replicationLevel == "Private" then
-		NETWORK_CHANGE:FireClient(player, key, serialized)
+		NETWORK_CHANGE:FireClient(player, toSend, serialized)
 	end
 end
 
