@@ -4,7 +4,7 @@ local Data = require(script.Parent.Data)
 type DataTemplate = { [string]: any }
 type PathEntry = { fullKey: string, parent: DataTemplate?, key: string }
 
-local PathMapping = {}
+local PathMap = {}
 
 local pathToId = {} :: { [string]: number }
 local idToMapping = {} :: { [number]: { tab: DataTemplate?, key: string } }
@@ -51,15 +51,15 @@ for i, entry in allPaths do
 	idToMapping[i] = { tab = entry.parent, key = entry.key }
 end
 
-function PathMapping.GetId(path: string): number?
+function PathMap.GetId(path: string): number?
 	return pathToId[path]
 end
 
-function PathMapping.GetMapping(id: number): { tab: DataTemplate?, key: string }?
+function PathMap.GetMapping(id: number): { tab: DataTemplate?, key: string }?
 	return idToMapping[id]
 end
 
-PathMapping.PathToId = pathToId
-PathMapping.IdToMapping = idToMapping
+PathMap.PathToId = pathToId
+PathMap.IdToMapping = idToMapping
 
-return PathMapping
+return PathMap

@@ -110,8 +110,4 @@ end
 
 task.spawn(Initialize)
 
-task.delay(5, function()
-	print(DataController.GetData():Unwrap())
-end)
-
 return DataController
