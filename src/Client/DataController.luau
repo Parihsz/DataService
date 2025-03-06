@@ -38,18 +38,6 @@ local function GetFieldType(key: string)
 	return fieldTypes[key] or "table"
 end
 
-local function ApplyUpdates(root: any, path: string, value: any): ()
-	local keys = path:split(".")
-	local node = root
-
-	for i = 1, #keys - 1 do
-		node[keys[i]] = node[keys[i]] or {}
-		node = node[keys[i]]
-	end
-
-	node[keys[#keys]] = value
-end
-
 local function HandleReplicateData(keyOrId: string | number, serialized: any, player: Player?): ()
 	if keyOrId == "FullData" then
 		if player then
@@ -85,7 +73,11 @@ local function HandleReplicateData(keyOrId: string | number, serialized: any, pl
 	if player then
 		PublicData.UpdateData(player, path, update)
 	else
-		ApplyUpdates(data, path, update[path])
+		local pointer = PathMapping.GetPointer(data :: Template.Data, path)
+		if pointer then
+			pointer.parent[pointer.key] = update[path]
+		end
+
 		DataController.Updated:Fire(data)
 	end
 end

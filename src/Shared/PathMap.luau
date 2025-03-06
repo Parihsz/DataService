@@ -59,6 +59,26 @@ function PathMap.GetMapping(id: number): { tab: DataTemplate?, key: string }?
 	return idToMapping[id]
 end
 
+local cache = {}
+
+function PathMap.GetPointer(data: DataTemplate, path: string): { parent: DataTemplate, key: string }?
+	if cache[path] then
+		return cache[path]
+	end
+
+	local keys = path:split(".")
+	local node = data
+	for i = 1, #keys - 1 do
+		node = node[keys[i]]
+		if not node then
+			return nil
+		end
+	end
+
+	cache[path] = { parent = node, key = keys[#keys] }
+	return cache[path]
+end
+
 PathMap.PathToId = pathToId
 PathMap.IdToMapping = idToMapping
 

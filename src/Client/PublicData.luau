@@ -1,32 +1,35 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
+local PathMapping = require(ReplicatedStorage.Shared.PathMap)
 
 local PublicData = {}
 
 local data = {}
+local cache = {}
 
 PublicData.Updated = Signal()
-
-local function ApplyUpdates(root: any, path: string, value: any): ()
-	local keys = path:split(".")
-	local node = root
-
-	for i = 1, #keys - 1 do
-		node[keys[i]] = node[keys[i]] or {}
-		node = node[keys[i]]
-	end
-
-	node[keys[#keys]] = value
-end
 
 function PublicData.UpdateData(player: Player, key: string, update)
 	data[player] = data[player] or {}
 
 	if key == "FullData" then
 		data[player] = update
+		cache[player] = {}
 	else
-		ApplyUpdates(data[player], key, update[key])
+		cache[player] = cache[player] or {}
+		local pointer = cache[player][key]
+
+		if not pointer then
+			pointer = PathMapping.GetPointer(data[player], key)
+			if pointer then
+				cache[player][key] = pointer
+			end
+		end
+
+		if pointer then
+			pointer.parent[pointer.key] = update[key]
+		end
 	end
 
 	PublicData.Updated:Fire(player, data[player])
@@ -38,6 +41,7 @@ end
 
 Players.PlayerRemoving:Connect(function(player)
 	data[player] = nil
+	cache[player] = nil
 end)
 
 return PublicData
