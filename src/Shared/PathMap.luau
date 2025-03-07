@@ -47,7 +47,7 @@ function PathMap.UpdateById(parentId: number, key: any, value: any)
 	if parentRef then
 		parentRef[key] = value
 	else
-		warn("No table reference found for ID", parentId)
+		warn(`No table reference found for ID {parentId}`)
 	end
 end
 

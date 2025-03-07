@@ -50,7 +50,7 @@ local function Replicate(
 
 	local parentId = PathMap.GetId(parentRef)
 	if not parentId then
-		warn("No ID found for table reference:", parentRef)
+		warn(`No ID found for table reference: {parentRef}`)
 		return
 	end
 
