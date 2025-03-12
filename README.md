@@ -1,5 +1,5 @@
 # DataService
-This is a ProfileService wrapper, allowing you safely read/write data within a single entry point while providing optimized networking. The main feature for this wrapper would be its serialization capabilities - 100% blazingly fast!⚡
+This is a ProfileService wrapper, allowing you to safely read/write data within a single entry point while providing optimized networking. The main feature for this wrapper would be its serialization capabilities - 100% blazingly fast!⚡
 
 This can be used outside of data tables 
 * any form of state tracking and networking can be done with this. Simply use ``.MakeNetworkable(player, template)``
